@@ -70,34 +70,44 @@ public class Bereshit_101 {
 		alt -= dt*vs;
 	}
 
-	public void preLanding(){
-		double error = 25 - vs;
-		ang = 58.3;
-		double pidRes= pdVS.update(error,dt);
+	public void changeThrust(double desiredSpeed){
+		double err = desiredSpeed - vs;
+		double pidRes = pdVS.update(
+				err,
+				dt
+		);
 		NN = (NN-pidRes>0 && NN-pidRes<1) ? NN-pidRes : NN;
+	}
+	public double desiredSpeed(){
+		if(this.alt>2000){
+			return 25;
+		}else if(this.alt>1500){
+			return 15;
+		}else if(this.alt>700){
+			return 10;
+		}else if(this.alt>500){
+			return 7;
+		}else if(this.alt>400){
+			return 4;
+		}else{
+			return 0;
+		}
+	}
+	public void preLanding(){
+		ang = 58.3;
+		this.changeThrust(this.desiredSpeed());
 		this.updateState();
 	}
 
 	public void landing(){
 				if(ang>3) {ang-=3;} // rotate to vertical position.
 				else {ang =0;}
-				double err = 2 - vs;
-				double pidRes = pdVS.update(
-						err,
-						dt
-				);
-				NN = (NN-pidRes>0 && NN-pidRes<1) ? NN-pidRes : NN;
+				this.changeThrust(2);
 				if(hs<2) {hs=0;}
 				if(alt<125) { // very close to the ground!
-					if(vs <=2.5 && hs <=2.5){
-						this.updateState();
-						return;
-					}
-					double NNPIDRES = pdHS.update(1-NN,dt);
-					NN = (NN-NNPIDRES>0 && NN-NNPIDRES<1) ? NN-NNPIDRES : NN;
+					this.changeThrust(1);
 					if(vs<5) {
-						NNPIDRES = pdHS.update(0.85-NN,dt);
-						NN = (NN-NNPIDRES>0 && NN-NNPIDRES<1) ? NN-NNPIDRES : NN;
+						this.changeThrust(0.85);
 					} // if it is slow enough - go easy on the brakes
 				}
 				this.updateState();
